@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdbool.h>
 #include "game.h"
 
 uint16_t **create_empty_grid(void) {
@@ -55,171 +54,6 @@ void display_grid(uint16_t **grid) {
     return;
 }
 
-int nb_not_empty_boxes(uint16_t **grid, int l, int dir) {
-    int j, n = 0;
-    for (j = 0; j < N; j++) {
-        if (dir == WEST || dir == EAST) {
-            n += (grid[l][j] != 0)?1:0;
-        } else {
-            n += (grid[j][l] != 0)?1:0;
-        }
-    }
-    return n;
-}
-
-#if 0
-int remove_gaps(uint16_t **grid, uint8_t l, uint8_t c, uint8_t dir) {
-    int k;
-    switch (dir) {
-    case NORTH:
-        if ((l + 1) < N && grid[l+1][c] != 0) {
-            return 0;
-        }
-        k = l + 2;
-        while (k < N && grid[k][c] == 0) {
-            k++;
-        }
-        if (k >= N) {
-            return 0;
-        } else {
-            grid[l+1][c] = grid[k][c];
-            grid[k][c] = 0;
-        }
-        break;
-    case WEST:
-        if (grid[l][c + 1] != 0) {
-            return 0;
-        }
-        k = c + 2;
-        while (k < N && grid[l][k] == 0) {
-            k++;
-        }
-        if (k == N) {
-            return 0;
-        } else {
-            grid[l][c + 1] = grid[l][k];
-            grid[l][k] = 0;
-        }
-        break;
-    case SOUTH:
-    case EAST:
-        return 0;
-        break;
-    }
-    return 0;
-}
-
-int merge_tiles(uint16_t **grid, uint8_t c, uint8_t l, uint8_t dir) {
-    switch (dir) {
-    case NORTH:
-        if ((l + 1) < N && grid[l][c] == grid[l+1][c]) {
-            grid[l][c] *= 2;
-            grid[l+1][c] = 0;
-            return 1;
-        } else {
-            return 0;
-        }
-        break;
-    case WEST:
-        if ( (c + 1) < N && grid[l][c] == grid[l][c+1]) {
-            grid[l][c] *= 2;
-            grid[l][c + 1] = 0;
-            return 1;
-        } else {
-            return 0;
-        }
-        break;
-    case SOUTH:
-        if ((l - 1) >= 0 && grid[l][c] == grid[l-1][c]) {
-            grid[l][c] *= 2;
-            grid[l-1][c] = 0;
-            return 1;
-        } else {
-            return 0;
-        }
-    }
-    return 0;
-}
-
-int bring_first_tile(uint16_t **grid, uint8_t d, uint8_t dir) {
-    int i;
-    switch (dir) {
-    case NORTH:
-        if (grid[0][d] != 0) {
-            return 0;
-        }
-        for (i = 1; i < N; i++) {
-            if (grid[i][d] != 0) {
-                grid[0][d] = grid[i][d];
-                grid[i][d] = 0;
-                return 1;
-            }
-        }
-        break;
-    case WEST:
-        if (grid[d][0] != 0) {
-            return 0;
-        }
-        for (i = 1; i < N; i++) {
-            if (grid[d][i] != 0) {
-                grid[d][0] = grid[d][i];
-                grid[d][i] = 0;
-                return 1;
-            }
-        }
-        break;
-    case SOUTH: 
-        break;
-    }
-    return 0;
-}
-
-int move_line(uint16_t **grid, uint8_t dir, uint8_t i) {
-    int k;
-    bring_first_tile(grid, i, dir);
-    for (k = 0; k < N; k++) {
-        if (dir == NORTH) {
-            remove_gaps(grid, k, i, dir);
-        } else if (dir == WEST || dir == EAST) {
-            remove_gaps(grid, i, k, dir);
-        } else if (dir == SOUTH) {
-            remove_gaps(grid, N - 1 - k, i, dir);
-        }
-        if (dir == NORTH) {
-            if (merge_tiles(grid, i, k, dir)) {
-                remove_gaps(grid, k, i, dir);
-            }
-        } else if (dir == WEST || dir == EAST) {
-            if (merge_tiles(grid, k, i, dir)) {
-                remove_gaps(grid, i, k, dir);
-            }
-        } else if (dir == SOUTH) {
-            if (merge_tiles(grid, N - 1 - k, i, dir)) {
-                remove_gaps(grid, i, N - 1 - k, dir);
-            }
-        }
-    }
-#if 0
-    for (k = 0; k < N; k++) {
-        if (grid[x + k * dx][y + k * dy] == 0) {
-            just_merged = false;
-            for (l = 0; l < prev; l++) {
-                grid[x + (k-l) * dx][y + (k-l) * dy] = grid[x + (k-l-1) * dx][y + (k-l-1) * dy];
-            }
-            grid[x + (k-l) * dx][y + (k-l) * dy] = 0;
-        } else if (k > 0 && !just_merged && grid[x + k * dx][y + k * dy] == grid[x + (k-1) * dx][y + (k-1) * dy]) {
-            grid[x + k * dx][y + k * dy] += grid[x + (k-1)*dx][y + (k-1)*dy];
-            grid[x + (k-1)*dx][y + (k-1)*dy] = 0;
-            just_merged = true;
-        } else {
-            just_merged = false;
-            prev += 1;
-        }
-    }
-#endif
-    return 0;
-}
-#endif
 
 /******************** MOVING TO SOUTH ********************/
 
@@ -242,7 +76,7 @@ bool remove_gaps_south(uint16_t **grid, uint8_t l, uint8_t c) {
 }
 
 bool merge_tiles_south(uint16_t **grid, uint8_t l, uint8_t c) {
-    if (l - 1 < 0 || grid[l][c] != grid[l-1][c]) {
+    if (l - 1 < 0 || grid[l][c] != grid[l-1][c] || grid[l][c] == 0) {
         return false;
     } else {
         grid[l][c] *= 2;
@@ -266,18 +100,22 @@ bool bring_first_tile_south(uint16_t **grid, uint8_t c) {
     return false;
 }
 
-int move_south(uint16_t **grid) {
+bool move_south(uint16_t **grid) {
     int l, c;
+    bool has_changed = false;
     for (c = 0; c < N; c++) {
-        bring_first_tile_south(grid, c);
+        if (bring_first_tile_south(grid, c)) 
+            has_changed = true;
         for (l = N-1; l > 0; l--) {
-            remove_gaps_south(grid, l, c);
+            if (remove_gaps_south(grid, l, c)) 
+                has_changed = true;
             if (merge_tiles_south(grid, l, c)) {
+                has_changed = true;
                 remove_gaps_south(grid, l, c);
             }
         }
     }
-    return 1;
+    return has_changed;
 }
 
 /******************** MOVING TO NORTH ********************/
@@ -301,7 +139,7 @@ bool remove_gaps_north(uint16_t **grid, uint8_t l, uint8_t c) {
 }
 
 bool merge_tiles_north(uint16_t **grid, uint8_t l, uint8_t c) {
-    if (l + 1 >= N || grid[l][c] != grid[l+1][c]) {
+    if (l + 1 >= N || grid[l][c] != grid[l+1][c] || grid[l][c] == 0) {
         return false;
     } else {
         grid[l][c] *= 2;
@@ -327,16 +165,20 @@ bool bring_first_tile_north(uint16_t **grid, uint8_t c) {
 
 int move_north(uint16_t **grid) {
     int l, c;
+    bool has_changed = false;
     for (c = 0; c < N; c++) {
-        bring_first_tile_north(grid, c);
+        if (bring_first_tile_north(grid, c)) 
+            has_changed = true;
         for (l = 0; l < N - 1; l++) {
-            remove_gaps_north(grid, l, c);
+            if (remove_gaps_north(grid, l, c)) 
+                has_changed = true;
             if (merge_tiles_north(grid, l, c)) {
+                has_changed = true;
                 remove_gaps_north(grid, l, c);
             }
         }
     }
-    return 1;
+    return has_changed;
 }
 
 /******************** MOVING TO EAST ********************/
@@ -360,7 +202,7 @@ bool remove_gaps_east(uint16_t **grid, uint8_t l, uint8_t c) {
 }
 
 bool merge_tiles_east(uint16_t **grid, uint8_t l, uint8_t c) {
-    if (c - 1 < 0 || grid[l][c] != grid[l][c-1]) {
+    if (c - 1 < 0 || grid[l][c] != grid[l][c-1] || grid[l][c] == 0) {
         return false;
     } else {
         grid[l][c] *= 2;
@@ -386,16 +228,20 @@ bool bring_first_tile_east(uint16_t **grid, uint8_t l) {
 
 int move_east(uint16_t **grid) {
     int l, c;
+    bool has_changed = false;
     for (l = 0; l < N; l++) {
-        bring_first_tile_east(grid, l);
+        if (bring_first_tile_east(grid, l)) 
+            has_changed = true;
         for (c = N - 1; c > 0; c--) {
-            remove_gaps_east(grid, l, c);
+            if (remove_gaps_east(grid, l, c)) 
+                has_changed = true;
             if (merge_tiles_east(grid, l, c)) {
+                has_changed = true;
                 remove_gaps_east(grid, l, c);
             }
         }
     }
-    return 1;
+    return has_changed;
 }
 
 /******************** MOVING TO WEST ********************/
@@ -419,7 +265,7 @@ bool remove_gaps_west(uint16_t **grid, uint8_t l, uint8_t c) {
 }
 
 bool merge_tiles_west(uint16_t **grid, uint8_t l, uint8_t c) {
-    if (c + 1 >= N || grid[l][c] != grid[l][c+1]) {
+    if (c + 1 >= N || grid[l][c] != grid[l][c+1] || grid[l][c] == 0) {
         return false;
     } else {
         grid[l][c] *= 2;
@@ -443,38 +289,40 @@ bool bring_first_tile_west(uint16_t **grid, uint8_t l) {
     return false;
 }
 
-int move_west(uint16_t **grid) {
+bool move_west(uint16_t **grid) {
     int l, c;
+    bool has_changed = false;
     for (l = 0; l < N; l++) {
-        bring_first_tile_west(grid, l);
+        if (bring_first_tile_west(grid, l)) 
+            has_changed = true;
         for (c = 0; c < N - 1; c++) {
-            remove_gaps_west(grid, l, c);
+            if (remove_gaps_west(grid, l, c)) 
+                has_changed = true;
             if (merge_tiles_west(grid, l, c)) {
+                has_changed = true;
                 remove_gaps_west(grid, l, c);
             }
         }
     }
-    return 1;
+    return has_changed;
 }
 
 
-int move(uint16_t **grid, uint8_t dir) {
+bool move(uint16_t **grid, uint8_t dir) {
     switch (dir) {
     case SOUTH:
-        move_south(grid);
-        break;
+        return move_south(grid);
     case NORTH:
-        move_north(grid);
-        break;
+        return move_north(grid);
     case EAST:
-        move_east(grid);
-        break;
+        return move_east(grid);
     case WEST:
-        move_west(grid);
-        break;
+        return move_west(grid);
+    default: 
+        return false;
     }
-    return 1;
 }
+
 
 void add_tile(uint16_t **grid) {
     int i, j;
@@ -483,4 +331,25 @@ void add_tile(uint16_t **grid) {
         j = rand() % N;
     } while (grid[i][j] != 0);
     grid[i][j] = 2*(rand() % 2 + 1);
+}
+
+
+bool game_over(uint16_t **grid) {
+    int i, j;
+    /* If there is an empty box (at least) game is not over */
+    for (i = 0 ; i < N; i++) {
+        for (j = 0; j < N; j++) {
+            if (grid[i][j] == 0) 
+                return false;
+        }
+    }
+    /* If two adjacent boxes have same value, game is not over */
+    for (i = 0; i < N - 1; i++) {
+        for (j = 0; j < N - 1; j++) {
+            if (grid[i][j] == grid[i][j+1] || grid[i][j] == grid[i+1][j])
+                return false;
+        }
+    }
+
+    return true;
 }

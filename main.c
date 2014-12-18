@@ -12,26 +12,27 @@ int main(void) {
     init_grid(grid);
     /* Display the grid */
     display_grid(grid);
-    while (1) {
-        mov = '!';
-        while (mov != 'z' && mov != 's' && mov != 'q' && mov != 'd') {
-            scanf(" %c", &mov);
-        }
-        switch (mov) {
-        case 'z':
-            dir = NORTH;
-            break;
-        case 's':
-            dir = SOUTH;
-            break;
-        case 'q':
-            dir = WEST;
-            break;
-        case 'd':
-            dir = EAST;
-            break;
-        }
-        move(grid, dir);
+    while (!game_over(grid)) {
+        do {
+            mov = '!';
+            while (mov != 'z' && mov != 's' && mov != 'q' && mov != 'd') {
+                scanf(" %c", &mov);
+            }
+            switch (mov) {
+            case 'z':
+                dir = NORTH;
+                break;
+            case 's':
+                dir = SOUTH;
+                break;
+            case 'q':
+                dir = WEST;
+                break;
+            case 'd':
+                dir = EAST;
+                break;
+            }
+        } while (!move(grid, dir));
         add_tile(grid);
         display_grid(grid);
     }

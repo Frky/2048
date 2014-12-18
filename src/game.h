@@ -2,6 +2,7 @@
 #define GAME_H__
 
 #include <stdlib.h>
+#include <stdbool.h>
 #include <stdint.h>
 
 #define     DEBUG   0
@@ -17,8 +18,10 @@ void init_grid(uint16_t **grid);
 
 void display_grid(uint16_t **grid);
 
-int move(uint16_t **grid, uint8_t dir);
+bool move(uint16_t **grid, uint8_t dir);
 
 void add_tile(uint16_t **grid);
+
+bool game_over(uint16_t **grid);
 
 #endif
