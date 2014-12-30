@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <stdio.h>
 #include "grid.h"
 
 /*
@@ -33,6 +32,10 @@ void init_grid(uint16_t **grid) {
     return;
 }
 
+/*
+ *  Creates a copy of the grid
+ *  This function allocaes memory
+ */
 uint16_t **copy_grid(uint16_t **grid) {
     uint16_t **new_grid = create_empty_grid();
     int i, j;
@@ -45,36 +48,27 @@ uint16_t **copy_grid(uint16_t **grid) {
 }
 
 /*
- *  Display a line of '-' between two lines of 
- *  numbers
+ *  Return the maximum value of a tile in the grid
  */
-void print_line_break(void) {
-    int i;
-    printf(" ");
+uint16_t max_tile(uint16_t **grid) {
+    uint16_t max = 0;
+    int i, j;
     for (i = 0; i < N; i++) {
-        printf("--- ");
+        for (j = 0; j < N; j++) {
+            max = (max<grid[i][j])?grid[i][j]:max;
+        }
     }
-    printf("\n");
-    return;
+    return max;
 }
 
 /*
- *  Display the grid on standard output with ascii chars 
+ *  Free a previously allocated grid
  */
-void display_grid(uint16_t **grid) {
-    int i, j;
-    print_line_break();
+void free_grid(uint16_t **grid) {
+    int i;
     for (i = 0; i < N; i++) {
-        for (j = 0; j < N; j++) {
-            printf("|");
-            if (grid[i][j]) {
-                printf(" %i ", grid[i][j]);
-            } else {
-                printf("   ");
-            }
-        }
-        printf("|\n");
-        print_line_break();
+        free(grid[i]);
     }
+    free(grid);
     return;
 }
