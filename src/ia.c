@@ -7,6 +7,7 @@
 
 #define INFINITE    2147483647  // = 2^31 - 1
 #define MAX_DEPTH   3           // 3 is enough to often reach 2048
+#define NB 15
 
 
 /*
@@ -146,7 +147,7 @@ int explore_moves(uint16_t **grid, int depth) {
 }
 
 int explore_game(uint16_t **grid, int depth) {
-    int i, j, k;
+    int i, j, k, n;
     uint16_t **grid_copy;
     int val, min_val = INFINITE;
 
@@ -154,6 +155,22 @@ int explore_game(uint16_t **grid, int depth) {
         return evaluate(grid);
     }
 
+    for (n = 0; n < NB; n++) {
+        do {
+            i = rand() % N;
+            j = rand() % N;
+        } while (grid[i][j] != 0);
+        grid_copy = copy_grid(grid);
+        grid_copy[i][j] = (rand() % 100 < 90)?2:4;
+        val = explore_moves(grid_copy, depth);
+        if (val < min_val) {
+            min_val = val;
+        }
+        free_grid(grid_copy);
+    }
+    return min_val;
+
+#if 0
     for (i = 0; i < N; i++) {
         for (j = 0; j < N; j++) {
             if (grid[i][j] != 0) 
@@ -176,6 +193,7 @@ int explore_game(uint16_t **grid, int depth) {
         }
     }
     return min_val;
+#endif
 }
 
 int best_move(uint16_t **grid) {

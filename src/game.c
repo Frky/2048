@@ -363,7 +363,7 @@ void add_tile(uint16_t **grid) {
     /* until we found an empty box */
     } while (grid[i][j] != 0);
     /* Putting a random value (2 or 4) */
-    grid[i][j] = 2*(rand() % 2 + 1);
+    grid[i][j] = (rand() % 100 < 90)?2:4;
     return;
 }
 
