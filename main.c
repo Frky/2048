@@ -1,11 +1,18 @@
 #include <time.h>
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
+
 #include "src/game.h"
+#include "src/ui.h"
+#include "src/ia.h"
+
+
+#define     IA      1
+#define     RANDOM  0
+#define     DEBUG   1
 
 int main(void) {
     int dir;
-    char mov = '!';
     srand(time(NULL));
     /* Creation of a grid */
     uint16_t **grid = create_empty_grid();
@@ -13,29 +20,31 @@ int main(void) {
     init_grid(grid);
     /* Display the grid */
     display_grid(grid);
+#if DEBUG
+    printf("Value: %i\n", evaluate(grid));
+#endif
+    /* Main loop for a game */
     while (!game_over(grid)) {
+        /* While the move does not lead to a change on the grid */
         do {
-            mov = '!';
-            while (mov != 'z' && mov != 's' && mov != 'q' && mov != 'd') {
-                scanf(" %c", &mov);
-            }
-            switch (mov) {
-            case 'z':
-                dir = NORTH;
-                break;
-            case 's':
-                dir = SOUTH;
-                break;
-            case 'q':
-                dir = WEST;
-                break;
-            case 'd':
-                dir = EAST;
-                break;
-            }
+#if IA
+#if RANDOM
+            dir = random_move();
+#else
+            dir = best_move(grid);
+#endif
+#else
+            dir = ask_dir();
+#endif
+        /* Trying to play the move */
         } while (!move(grid, dir));
+        /* Add a new tile at the end of each round */
         add_tile(grid);
+        /* Display the new grid */
         display_grid(grid);
+#if DEBUG
+        printf("Value: %i\n", evaluate(grid));
+#endif
     }
     return 0;
 }
