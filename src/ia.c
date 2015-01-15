@@ -149,7 +149,7 @@ int explore_moves(uint16_t **grid, int depth) {
 int explore_game(uint16_t **grid, int depth) {
     int i, j, k, n;
     uint16_t **grid_copy;
-    int val, min_val = INFINITE;
+    float av_val = 0;
 
     if (depth >= MAX_DEPTH) {
         return evaluate(grid);
@@ -162,13 +162,10 @@ int explore_game(uint16_t **grid, int depth) {
         } while (grid[i][j] != 0);
         grid_copy = copy_grid(grid);
         grid_copy[i][j] = (rand() % 100 < 90)?2:4;
-        val = explore_moves(grid_copy, depth);
-        if (val < min_val) {
-            min_val = val;
-        }
+        av_val += explore_moves(grid_copy, depth);
         free_grid(grid_copy);
     }
-    return min_val;
+    return av_val / NB;
 
 #if 0
     for (i = 0; i < N; i++) {
