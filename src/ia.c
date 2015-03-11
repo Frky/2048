@@ -20,6 +20,13 @@ uint16_t tile_gap(uint16_t a, uint16_t b) {
         return a - b;
 }
 
+uint8_t nb_empty_box_bin(grid_t grid) {
+    uint8_t n;
+    int i;
+    for (i = 0; i < N*N; i++)
+        n += (get_box(grid, i) == 0)?1:0;
+    return n;
+}
 
 /*
  *  Return the number of empty boxes in the grid
@@ -65,6 +72,24 @@ uint8_t tile_position(uint16_t **grid, uint16_t tile) {
     return pos;
 }
 
+uint8_t tile_position_bin(grid_t grid, uint8_t tile) {
+    uint8_t pos = 0, new_pos;
+    int i, j;
+    for (i = 0; i < N; i++) {
+        for (j = 0; j < N; j++) {
+            if (get_box(grid, i * N + j) == tile) {
+                new_pos = 0;
+                if (j == 0 || j == N-1)
+                    new_pos++;
+                if (i == 0 || i == N-1) 
+                    new_pos++;
+                if (pos < new_pos)
+                    pos = new_pos;
+            }
+        }
+    }
+    return pos;
+}
 /*
  *  Return the log in base two of the tile given in parameter
  */
@@ -76,6 +101,30 @@ uint8_t log_two(uint16_t tile) {
         res++;
     }
     return res;
+}
+
+
+int compacity_bin(grid_t grid) {
+    int gap = 0, nb_gaps = 0;
+    int i, j;
+    for (i = 0; i < N; i++) {
+        for (j = 0; j < N; j++) {
+            if (i + 1 < N) { 
+                gap += 2*tile_gap(bin_to_tile(get_box(grid, i * N + j)), 
+                                    bin_to_tile(get_box(grid, (i + 1) * N + j)));
+                nb_gaps++;
+            }
+            if (j + 1 < N) { 
+                gap += 2*tile_gap(bin_to_tile(get_box(grid, i * N + j)), 
+                                    bin_to_tile(get_box(grid, i * N + j + 1)));
+                nb_gaps++;
+            }
+        }
+    }
+    if (nb_gaps == 0) 
+        return 0;
+    else
+        return gap / (nb_gaps*2);
 }
 
 /*
@@ -122,12 +171,40 @@ int evaluate(uint16_t **grid) {
     return value;
 }
 
+int evaluate_bin(grid_t grid, uint8_t nb_empty_box) {
+    uint8_t max = max_tile_bin(grid);
+    uint8_t pos_of_max = tile_position_bin(grid, max);
+    int value = max + 3*pos_of_max + nb_empty_box_bin(grid);
+    if (nb_empty_box == 0 && !merge_possible_bin(grid))
+        return -INFINITE;
+    value -= compacity_bin(grid);
+    return value;
+}
 
 int random_move(void) {
     return rand() % 4;
 }
 
 int explore_game(uint16_t **grid, int depth);
+int explore_game_bin(grid_t grid, int depth, uint8_t nb_empty_box);
+
+int explore_moves_bin(grid_t grid, int depth, uint8_t nb_empty_box) {
+    int dir;
+    uint8_t nb_merge;
+    grid_t grid_copy;
+    int val, max_val = -INFINITE;
+    for (dir = 0; dir < 4; dir++) {
+        grid_copy = move_bin(grid, dir, &nb_merge);
+        nb_empty_box += nb_merge;
+        if (grid != grid_copy) {
+            val = explore_game_bin(grid_copy, depth + 1, nb_empty_box);
+            if (val > max_val) {
+                max_val = val;
+            }
+        }
+    }
+    return max_val;
+}
 
 int explore_moves(uint16_t **grid, int depth) {
     int dir;
@@ -144,6 +221,27 @@ int explore_moves(uint16_t **grid, int depth) {
         free_grid(grid_copy);
     }
     return max_val;
+}
+
+int explore_game_bin(grid_t grid, int depth, uint8_t nb_empty_box) {
+    int i, j, k, n;
+    grid_t grid_copy;
+    float av_val = 0;
+
+    if (depth >= MAX_DEPTH) {
+        return evaluate_bin(grid, nb_empty_box);
+    }
+
+    for (n = 0; n < NB; n++) {
+        do {
+            i = rand() % N;
+            j = rand() % N;
+        } while (get_box(grid, i * N + j) != 0);
+        nb_empty_box--;
+        grid_copy = set_box(grid, i * N + j, (rand() % 100 < 90)?2:4);
+        av_val += explore_moves_bin(grid_copy, depth, nb_empty_box);
+    }
+    return av_val / NB;
 }
 
 int explore_game(uint16_t **grid, int depth) {
@@ -211,3 +309,22 @@ int best_move(uint16_t **grid) {
     return best_dir;
 }
 
+int best_move_bin(grid_t grid, uint8_t nb_empty_box) {
+    printf("Value: %i\n", evaluate_bin(grid, nb_empty_box));
+    int dir, best_dir;
+    uint8_t nb_merge;
+    int val, max_val = -INFINITE;
+    grid_t grid_copy;
+    for (dir = 0; dir < N; dir++) {
+        grid_copy = move_bin(grid, dir, &nb_merge);
+        nb_empty_box += nb_merge;
+        if (grid != grid_copy) {
+            val = explore_game_bin(grid_copy, 1, nb_empty_box);
+            if (val >= max_val) {
+                max_val = val;
+                best_dir = dir;
+            }
+        }
+    }
+    return best_dir;
+}

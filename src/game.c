@@ -1,5 +1,7 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include "game.h"
+#include "ui.h"
 
 /* 
    In this file for each direction there are four functions
@@ -391,4 +393,96 @@ bool game_over(uint16_t **grid) {
     }
 
     return true;
+}
+
+/*
+ *  Try to merge (l, c) with (l-1, c)
+ *
+ *  Return true if the merge is successful, false otherwise
+ */
+row_t merge_tiles_bin(row_t row, uint8_t n) {
+    /* If we are at the top of the grid or if the values of the two boxes are
+       different */
+    if (n >= N - 1 || get_box_in_row(row, n) != get_box_in_row(row, n + 1) || get_box_in_row(row, n) == 0)
+        return row;
+    row = set_box_in_row(row, n, get_box_in_row(row, n) + 1);
+    row = set_box_in_row(row, n + 1, 0);
+    return row;
+}
+
+row_t remove_gaps_bin(row_t row, uint8_t n) {
+    int i;
+    if (n == N - 1 || get_box_in_row(row, n) == 0 || get_box_in_row(row, n + 1) != 0) {
+        return row;
+    }
+    i = n + 2;
+    while (i < N && get_box_in_row(row, i) == 0)
+        i += 1;
+    if (i >= N)
+        return row;
+    row = set_box_in_row(row, n + 1, get_box_in_row(row, i));
+    row = set_box_in_row(row, i, 0);
+    return row;
+}
+
+row_t bring_first_tile(row_t row) {
+    int i = 0;
+    while ((row & BOX_MASK) == 0 && i < N) {
+        row = row >> BOX_SIZE;
+        i++;
+    }
+    return row;
+}
+
+/* /!\ Convention: les bits de poids faible de row codent la première case 
+    (celle de la direction du mouvement). Par exemple, si la direction est 
+    NORTH, alors les bits de poids faible de row codent la case la plus au nord
+ */
+grid_t move_bin(grid_t grid, uint8_t dir, uint8_t *nb_merges_out) {
+    int i, j;
+    uint8_t nb_merges = 0;
+    row_t row, saved_row;
+    for (i = 0; i < N; i++) {
+        row = get_row(grid, dir, i);
+        row = bring_first_tile(row);   
+        for (j = 0; j < N - 1; j++) {
+            row = remove_gaps_bin(row, j);
+            saved_row = row;
+            row = merge_tiles_bin(row, j);
+            if (row != saved_row)
+                nb_merges++;
+            row = remove_gaps_bin(row, j);
+        }
+        grid = set_row(grid, dir, i, row);
+    }
+    *nb_merges_out = nb_merges;
+    return grid;
+}
+
+grid_t add_tile_bin(grid_t grid) {
+    int i, j;
+    /* Randomize the two coordinates i and j */
+    do {
+        i = rand() % N;
+        j = rand() % N;
+    /* until we found an empty box */
+    } while (get_box(grid, i * N + j) != 0);
+    /* Putting a random value (2 or 4) */
+    grid = set_box(grid, i * N + j, (rand() % 100 < 90)?2:4);
+    return grid;
+}
+
+bool merge_possible_bin(grid_t grid) {
+    int i, j;
+    /* If two adjacent boxes have same value, game is not over */
+    for (i = 0; i < N; i++) {
+        for (j = 0; j < N; j++) {
+            if (j + 1 < N && get_box(grid, i * N + j) == get_box(grid, i * N + j + 1))
+                return true;
+            if (i + 1 < N && get_box(grid, i * N + j) == get_box(grid, (i+1) * N + j))
+                return true;
+        }
+    }
+
+    return false;
 }

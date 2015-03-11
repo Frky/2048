@@ -1,7 +1,6 @@
 #include "ui.h"
 #include <stdio.h>
 
-
 /*
  *  Display a line of '-' between two lines of 
  *  numbers
@@ -66,3 +65,33 @@ int ask_dir(void) {
     /* Returning the corresponding direction */
     return dir;
 }
+
+void display_grid_bin(grid_t grid) {
+    int i;
+    uint8_t box;
+    print_line_break();
+    for (i = 0; i < 16; i++) {
+        printf("|");
+        box = get_box(grid, i);
+        if (box)
+            printf(" %u ", bin_to_tile(box));
+        else
+            printf("   ");
+        if (i % 4 == 3) {
+            printf("|\n");
+            print_line_break();
+        }
+    }
+}
+
+void display_row(row_t row) {
+    int i;
+    printf("|");
+    for (i = 0; i < 4; i++) {
+        printf(" %u |", row & BOX_MASK);
+        row = row >> BOX_SIZE;
+    }
+    printf("\n");
+    return;
+}
+
