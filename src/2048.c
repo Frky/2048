@@ -3,9 +3,9 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#include "src/game.h"
-#include "src/ui.h"
-#include "src/ia.h"
+#include "game.h"
+#include "ui.h"
+#include "ia.h"
 
 #define     USE_BIN 1
 #define     IA      1

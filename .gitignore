@@ -29,4 +29,5 @@
 *.hex
 
 .DS_Store
-main
+obj/*.o
+2048
